@@ -1,0 +1,10 @@
+build/
+*.o
+*.so
+*.a
+mqtt_sender
+.vscode/
+*.swp
+*.swo
+*~
+.cache

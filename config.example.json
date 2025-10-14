@@ -1,0 +1,18 @@
+{
+  "mqtt": {
+    "broker": "localhost",
+    "port": 1883,
+    "topic": "device/control",
+    "qos": 1,
+    "client_id": "mqtt_sender_client"
+  },
+  "message": {
+    "command": "start-recording",
+    "device_id": "camera_01",
+    "timestamp": "2025-10-14T10:30:00Z",
+    "parameters": {
+      "resolution": "1080p",
+      "framerate": 30
+    }
+  }
+}

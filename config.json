@@ -1,0 +1,12 @@
+{
+  "mqtt": {
+    "broker": "localhost",
+    "port": 1883,
+    "topic": "command",
+    "qos": 1,
+    "client_id": "mqtt_sender_client"
+  },
+  "message": {
+    "command": "stop-detect-recording"
+  }
+}
