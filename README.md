@@ -117,7 +117,7 @@ mosquitto_sub -h localhost -t "test/topic"
 ## 项目结构
 
 ```
-mqtt_test/
+udpmulticast_bridge_mqtt/
 ├── CMakeLists.txt
 ├── config.json
 ├── README.md

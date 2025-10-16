@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(mqtt_tests)
+project(udpmulticast_bridge_mqtt)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
