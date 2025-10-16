@@ -2,7 +2,6 @@
 #define CONFIG_READER_H
 
 #include <string>
-#include <map>
 
 class ConfigReader {
 public:
@@ -14,7 +13,8 @@ public:
     std::string getTopic() const;
     int getQos() const;
     std::string getClientId() const;
-    std::string getMessage() const;
+    std::string getMulticastAddr() const;
+    int getMulticastPort() const;
 
 private:
     std::string config_file_;
@@ -23,11 +23,10 @@ private:
     std::string topic_;
     int qos_;
     std::string client_id_;
-    std::string message_;
 
-    std::string trim(const std::string& str);
-    std::string extractJsonValue(const std::string& json, const std::string& key);
-    std::string extractNestedValue(const std::string& json, const std::string& section, const std::string& key);
+    // UDP multicast settings
+    std::string multicast_addr_;
+    int multicast_port_;
 };
 
 #endif // CONFIG_READER_H

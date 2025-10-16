@@ -32,23 +32,25 @@ MqttClient::~MqttClient() {
 }
 
 bool MqttClient::connect() {
-    int rc = mosquitto_connect(mosq_, broker_.c_str(), port_, 60);
-    
-    if (rc != MOSQ_ERR_SUCCESS) {
-        std::cerr << "Failed to connect: " << mosquitto_strerror(rc) << std::endl;
-        return false;
-    }
-    
-    // 启动网络循环
-    rc = mosquitto_loop_start(mosq_);
+    // 启动网络循环（先启动线程，再异步连接）
+    int rc = mosquitto_loop_start(mosq_);
     if (rc != MOSQ_ERR_SUCCESS) {
         std::cerr << "Failed to start loop: " << mosquitto_strerror(rc) << std::endl;
         return false;
     }
     
+    // 使用异步连接，不会阻塞
+    rc = mosquitto_connect_async(mosq_, broker_.c_str(), port_, 60);
+    
+    if (rc != MOSQ_ERR_SUCCESS) {
+        std::cerr << "Failed to connect async: " << mosquitto_strerror(rc) << std::endl;
+        mosquitto_loop_stop(mosq_, true);
+        return false;
+    }
+    
     // 等待连接建立
     int retry = 0;
-    while (!connected_ && retry < 50) {
+    while (!connected_ && retry < 5) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         retry++;
     }

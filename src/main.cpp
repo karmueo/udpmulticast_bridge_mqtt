@@ -1,61 +1,65 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-#include "mqtt_client.h"
 #include "config_reader.h"
+#include "udp_to_mqtt_forwarder.h"
+#include <csignal>
+#include <atomic>
 
 int main(int argc, char* argv[]) {
-    // 默认配置文件路径
+    // 默认配置文件
     std::string config_file = "config.json";
-    
-    // 如果提供了命令行参数，使用指定的配置文件
     if (argc > 1) {
         config_file = argv[1];
     }
-    
+
     std::cout << "Loading configuration from: " << config_file << std::endl;
-    
-    // 读取配置
     ConfigReader config(config_file);
     if (!config.load()) {
         std::cerr << "Failed to load configuration" << std::endl;
         return 1;
     }
-    
-    std::cout << "Configuration loaded successfully" << std::endl;
-    std::cout << "Broker: " << config.getBroker() << ":" << config.getPort() << std::endl;
-    std::cout << "Topic: " << config.getTopic() << std::endl;
-    std::cout << "QoS: " << config.getQos() << std::endl;
-    std::cout << "Message: " << config.getMessage() << std::endl;
-    
-    // 创建MQTT客户端
-    MqttClient client(config.getClientId(), config.getBroker(), config.getPort());
-    
-    // 连接到broker
-    std::cout << "\nConnecting to MQTT broker..." << std::endl;
-    if (!client.connect()) {
-        std::cerr << "Failed to connect to MQTT broker" << std::endl;
+
+    // 从配置中读取MQTT和UDP组播相关字段
+    std::string broker = config.getBroker();
+    int port = config.getPort();
+    std::string topic = config.getTopic();
+    int qos = config.getQos();
+    std::string client_id = config.getClientId();
+
+    // UDP multicast settings from config
+    std::string multicast_addr = config.getMulticastAddr();
+    int multicast_port = config.getMulticastPort();
+
+    std::cout << "MQTT broker: " << broker << ":" << port << std::endl;
+    std::cout << "MQTT topic: " << topic << " qos=" << qos << std::endl;
+    std::cout << "UDP multicast: " << multicast_addr << ":" << multicast_port << std::endl;
+
+    // 创建并启动转发器
+    UdpToMqttForwarder forwarder(client_id, broker, port, topic, qos, multicast_addr, multicast_port);
+    if (!forwarder.start()) {
+        std::cerr << "Failed to start UDP->MQTT forwarder" << std::endl;
         return 1;
     }
-    
-    // 等待连接稳定
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
-    // 发布消息
-    std::cout << "\nPublishing message..." << std::endl;
-    if (!client.publish(config.getTopic(), config.getMessage(), config.getQos())) {
-        std::cerr << "Failed to publish message" << std::endl;
-        client.disconnect();
-        return 1;
+
+    // 运行直到用户中断（SIGINT/SIGTERM）
+    static std::atomic<bool> keepRunning{true};
+
+    auto signalHandler = [](int signum) {
+        (void)signum;
+        keepRunning.store(false);
+    };
+
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
+
+    std::cout << "Forwarder running. Press Ctrl+C to stop..." << std::endl;
+    // 主线程等待，直到接收到终止信号或内部转发器停止
+    while (keepRunning.load() && forwarder.isRunning()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
-    
-    // 等待消息发送完成
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    
-    // 断开连接
-    std::cout << "\nDisconnecting..." << std::endl;
-    client.disconnect();
-    
-    std::cout << "Done!" << std::endl;
+
+    forwarder.stop();
+    std::cout << "Exiting" << std::endl;
     return 0;
 }

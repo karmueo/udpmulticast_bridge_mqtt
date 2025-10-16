@@ -27,19 +27,25 @@
 - CMake (>= 3.10)
 - libmosquitto (Mosquitto客户端库)
 - C++17编译器
+- Catch2 (仅用于单元/集成测试)
+GoogleTest / GoogleMock (已移除：项目现在仅使用 Catch2 进行测试)
 
 ### 在Ubuntu/Debian上安装依赖
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y cmake g++ libmosquitto-dev
+sudo apt-get install -y cmake g++ libmosquitto-dev catch2
 ```
+
+> 提示：如果发行版的 Catch2 版本较旧，可从 [Catch2 Releases](https://github.com/catchorg/Catch2/releases) 获取 v3 源码自行编译。
 
 ### 在Fedora/CentOS上安装依赖
 
 ```bash
-sudo yum install -y cmake gcc-c++ mosquitto-devel
+sudo yum install -y cmake gcc-c++ mosquitto-devel catch2
 ```
+
+> 提示：如果需要 GoogleTest/GMock 用于其他项目，可单独安装 `gtest-devel`/`gmock-devel`；本仓库已统一使用 Catch2。
 
 ## 编译
 
