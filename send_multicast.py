@@ -58,8 +58,8 @@ def main():
     parser = ArgumentParser(description="UDP Multicast Message Sender")
     parser.add_argument("--addr", default="239.255.0.1", 
                         help="Multicast address (default: 239.255.0.1)")
-    parser.add_argument("--port", type=int, default=6000,
-                        help="Port number (default: 6000)")
+    parser.add_argument("--port", type=int, default=5555,
+                        help="Port number (default: 5555)")
     parser.add_argument("--message", "-m", default=None,
                         help="Message to send")
     parser.add_argument("--json", "-j", action="store_true",
