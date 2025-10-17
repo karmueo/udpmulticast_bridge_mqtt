@@ -10,7 +10,7 @@ import time
 import sys
 from argparse import ArgumentParser
 
-def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl=2):
+def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl=2, use_current_timestamp=False):
     """
     发送UDP组播消息
     
@@ -19,8 +19,19 @@ def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl
         multicast_addr: 组播地址
         port: 端口号
         ttl: TTL (生存时间)，决定消息能传播的范围
+        use_current_timestamp: 是否在发送时使用当前时间戳更新JSON消息
     """
     try:
+        # 如果需要使用当前时间戳，更新JSON消息
+        if use_current_timestamp and message.startswith('{'):
+            try:
+                msg_data = json.loads(message)
+                if 'timestamp' in msg_data:
+                    msg_data['timestamp'] = int(time.time() * 1000)  # 使用毫秒级时间戳
+                    message = json.dumps(msg_data)
+            except json.JSONDecodeError:
+                pass  # 如果不是有效的JSON，保持原样
+        
         # 创建UDP套接字
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
@@ -64,7 +75,7 @@ def main():
         if args.json:
             args.message = json.dumps({
                 "command": "stop-detect-recording",
-                "timestamp": int(time.time()),
+                "timestamp": int(time.time() * 1000),  # 使用毫秒级时间戳
                 "status": "success"
             })
         else:
@@ -90,7 +101,7 @@ def main():
         if args.count > 1:
             print(f"Sending message {i+1}/{args.count}...")
         
-        if send_multicast_message(args.message, args.addr, args.port, args.ttl):
+        if send_multicast_message(args.message, args.addr, args.port, args.ttl, True if args.json else False):
             success_count += 1
         
         if args.count > 1 and i < args.count - 1:
