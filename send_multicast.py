@@ -77,7 +77,7 @@ def main():
     if args.message is None:
         if args.json:
             args.message = json.dumps({
-                "command": "stop-detect-recording",
+                "command": "start-detect-recording",
                 "timestamp": int(time.time() * 1000),  # 使用毫秒级时间戳
                 "status": "success"
                 # id字段将在发送时动态添加

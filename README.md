@@ -253,7 +253,7 @@ python3 send_multicast.py -j -c 100
 python3 send_multicast.py -j -c 100 -i 0.1
 
 # 自定义组播地址和端口
-python3 send_multicast.py -j -c 10 --addr 239.255.0.1 --port 6000
+python3 send_multicast.py -j -c 10 --addr 239.255.0.1 --port 5555
 ```
 
 UDP组播测试工具支持以下参数：
