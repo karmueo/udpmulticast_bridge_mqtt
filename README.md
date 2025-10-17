@@ -5,8 +5,13 @@
   - [配置文件](#配置文件)
     - [配置项说明](#配置项说明)
   - [运行](#运行)
+  - [系统服务配置](#系统服务配置)
+    - [将mqtt\_sender设置为系统服务](#将mqtt_sender设置为系统服务)
+    - [服务管理命令](#服务管理命令)
+    - [故障排除](#故障排除)
   - [测试](#测试)
-  - [项目结构](#项目结构)
+    - [MQTT消息测试](#mqtt消息测试)
+    - [UDP组播测试](#udp组播测试)
   - [自定义消息](#自定义消息)
 
 # MQTT JSON Sender
@@ -37,8 +42,6 @@ sudo apt-get install -y cmake g++ libmosquitto-dev catch2 nlohmann-json3-dev
 
 > 提示：如果发行版的 Catch2 版本较旧，可从 [Catch2 Releases](https://github.com/catchorg/Catch2/releases) 获取 v3 源码自行编译。
 ```
-
-> 提示：如果需要 GoogleTest/GMock 用于其他项目，可单独安装 `gtest-devel`/`gmock-devel`；本仓库已统一使用 Catch2。
 
 ## 编译
 
@@ -91,7 +94,135 @@ make
 ./mqtt_sender /path/to/config.json
 ```
 
+## 系统服务配置
+
+### 将mqtt_sender设置为系统服务
+
+1. **安装程序和服务文件**
+
+   首先安装程序到系统目录：
+
+   ```bash
+   sudo cmake --install build
+   ```
+
+   这将安装：
+   - 可执行文件到 `/usr/local/bin/mqtt_sender`
+   - 配置文件到 `/usr/local/etc/config.json`
+   - 文档到 `/usr/local/share/doc/mqtt_sender/`
+
+2. **创建systemd服务文件**
+
+   创建服务文件 `/etc/systemd/system/mqtt_sender.service`：
+
+   ```bash
+   sudo vim /etc/systemd/system/mqtt_sender.service
+   ```
+   添加以下内容
+
+   ```bash
+   [Unit]
+   Description=MQTT Sender Service
+   After=network.target mosquitto.service
+   Wants=mosquitto.service
+
+   [Service]
+   Type=simple
+   ExecStart=/usr/local/bin/mqtt_sender /usr/local/etc/config.json
+   Restart=always
+   RestartSec=5
+   User=mqtt
+   Group=mqtt
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+3. **创建专用用户（可选但推荐）**
+
+   ```bash
+   sudo useradd -r -s /bin/false mqtt
+   ```
+
+4. **设置配置文件权限**
+
+   ```bash
+   sudo chown mqtt:mqtt /usr/local/etc/config.json
+   sudo chmod 600 /usr/local/etc/config.json
+   ```
+
+5. **重新加载systemd并启动服务**
+
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl start mqtt_sender
+   sudo systemctl enable mqtt_sender
+   ```
+
+6. **检查服务状态**
+
+   ```bash
+   sudo systemctl status mqtt_sender
+   ```
+
+7. **查看服务日志**
+
+   ```bash
+   sudo journalctl -u mqtt_sender -f
+   ```
+
+### 服务管理命令
+
+```bash
+# 启动服务
+sudo systemctl start mqtt_sender
+
+# 停止服务
+sudo systemctl stop mqtt_sender
+
+# 重启服务
+sudo systemctl restart mqtt_sender
+
+# 启用开机自启动
+sudo systemctl enable mqtt_sender
+
+# 禁用开机自启动
+sudo systemctl disable mqtt_sender
+
+# 查看服务状态
+sudo systemctl status mqtt_sender
+
+# 查看服务日志
+sudo journalctl -u mqtt_sender -f
+```
+
+### 故障排除
+
+如果服务启动失败，检查：
+
+1. **配置文件权限**：
+   ```bash
+   ls -la /usr/local/etc/config.json
+   ```
+
+2. **Mosquitto服务状态**：
+   ```bash
+   sudo systemctl status mosquitto
+   ```
+
+3. **网络连接**：
+   ```bash
+   sudo journalctl -u mqtt_sender -n 50
+   ```
+
+4. **手动测试**：
+   ```bash
+   sudo -u mqtt /usr/local/bin/mqtt_sender /usr/local/etc/config.json
+   ```
+
 ## 测试
+
+### MQTT消息测试
 
 1. 启动Mosquitto broker（如果还没有运行）：
 
@@ -107,21 +238,31 @@ mosquitto_sub -h localhost -t "test/topic"
 
 3. 运行mqtt_sender程序发送消息
 
-## 项目结构
+### UDP组播测试
 
+项目还包含一个Python UDP组播测试工具，可以用来测试UDP组播消息发送：
+
+```bash
+# 发送单条JSON消息
+python3 send_multicast.py -j
+
+# 发送100条JSON消息（每条间隔1秒）
+python3 send_multicast.py -j -c 100
+
+# 发送100条JSON消息（每条间隔0.1秒）
+python3 send_multicast.py -j -c 100 -i 0.1
+
+# 自定义组播地址和端口
+python3 send_multicast.py -j -c 10 --addr 239.255.0.1 --port 6000
 ```
-udpmulticast_bridge_mqtt/
-├── CMakeLists.txt
-├── config.json
-├── README.md
-├── include/
-│   ├── mqtt_client.h
-│   └── config_reader.h
-└── src/
-    ├── main.cpp
-    ├── mqtt_client.cpp
-    └── config_reader.cpp
-```
+
+UDP组播测试工具支持以下参数：
+- `-j, --json`: 发送JSON格式消息
+- `-c, --count`: 发送消息数量（默认1）
+- `-i, --interval`: 发送间隔秒数（默认1.0）
+- `--addr`: 组播地址（默认239.255.0.1）
+- `--port`: 端口号（默认6000）
+- `-m, --message`: 自定义消息内容
 
 ## 自定义消息
 

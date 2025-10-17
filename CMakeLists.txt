@@ -44,3 +44,27 @@ enable_testing()
 
 # 添加测试子目录
 add_subdirectory(tests)
+
+# 安装规则
+include(GNUInstallDirs)
+
+# 安装可执行文件
+install(TARGETS mqtt_sender
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+# 安装配置文件
+install(FILES config.json
+    DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}
+)
+
+# 安装文档
+install(FILES README.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+)
+
+# 安装头文件（可选，用于库开发）
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+)
