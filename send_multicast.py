@@ -10,7 +10,7 @@ import time
 import sys
 from argparse import ArgumentParser
 
-def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl=2, use_current_timestamp=False):
+def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl=2, use_current_timestamp=False, message_id=None):
     """
     发送UDP组播消息
     
@@ -20,15 +20,18 @@ def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl
         port: 端口号
         ttl: TTL (生存时间)，决定消息能传播的范围
         use_current_timestamp: 是否在发送时使用当前时间戳更新JSON消息
+        message_id: 消息ID，如果提供且消息是JSON格式，则添加到消息中
     """
     try:
-        # 如果需要使用当前时间戳，更新JSON消息
-        if use_current_timestamp and message.startswith('{'):
+        # 如果需要使用当前时间戳或添加ID，更新JSON消息
+        if (use_current_timestamp or message_id is not None) and message.startswith('{'):
             try:
                 msg_data = json.loads(message)
-                if 'timestamp' in msg_data:
+                if use_current_timestamp and 'timestamp' in msg_data:
                     msg_data['timestamp'] = int(time.time() * 1000)  # 使用毫秒级时间戳
-                    message = json.dumps(msg_data)
+                if message_id is not None:
+                    msg_data['id'] = message_id
+                message = json.dumps(msg_data)
             except json.JSONDecodeError:
                 pass  # 如果不是有效的JSON，保持原样
         
@@ -77,6 +80,7 @@ def main():
                 "command": "stop-detect-recording",
                 "timestamp": int(time.time() * 1000),  # 使用毫秒级时间戳
                 "status": "success"
+                # id字段将在发送时动态添加
             })
         else:
             args.message = "Hello from UDP Multicast Test"
@@ -101,7 +105,9 @@ def main():
         if args.count > 1:
             print(f"Sending message {i+1}/{args.count}...")
         
-        if send_multicast_message(args.message, args.addr, args.port, args.ttl, True if args.json else False):
+        # 为JSON消息添加递增的ID
+        message_id = i + 1 if args.json else None
+        if send_multicast_message(args.message, args.addr, args.port, args.ttl, True if args.json else False, message_id):
             success_count += 1
         
         if args.count > 1 and i < args.count - 1:

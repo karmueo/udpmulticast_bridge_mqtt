@@ -1,9 +1,7 @@
 - [MQTT JSON Sender](#mqtt-json-sender)
   - [功能特性](#功能特性)
-  - [依赖项](#依赖项)
+  - [依赖config.json项](#依赖configjson项)
     - [在Ubuntu/Debian上安装依赖](#在ubuntudebian上安装依赖)
-    - [在Fedora/CentOS上安装依赖](#在fedoracentos上安装依赖)
-  - [编译](#编译)
   - [配置文件](#配置文件)
     - [配置项说明](#配置项说明)
   - [运行](#运行)
@@ -22,7 +20,7 @@
 - 支持自定义broker地址、端口和topic
 - 使用CMake构建系统
 
-## 依赖项
+## 依赖config.json项
 
 - CMake (>= 3.10)
 - libmosquitto (Mosquitto客户端库)
@@ -34,15 +32,10 @@ GoogleTest / GoogleMock (已移除：项目现在仅使用 Catch2 进行测试)
 
 ```bash
 sudo apt-get update
-sudo apt-get install -y cmake g++ libmosquitto-dev catch2
+sudo apt-get install -y cmake g++ libmosquitto-dev catch2 nlohmann-json3-dev
 ```
 
 > 提示：如果发行版的 Catch2 版本较旧，可从 [Catch2 Releases](https://github.com/catchorg/Catch2/releases) 获取 v3 源码自行编译。
-
-### 在Fedora/CentOS上安装依赖
-
-```bash
-sudo yum install -y cmake gcc-c++ mosquitto-devel catch2
 ```
 
 > 提示：如果需要 GoogleTest/GMock 用于其他项目，可单独安装 `gtest-devel`/`gmock-devel`；本仓库已统一使用 Catch2。
