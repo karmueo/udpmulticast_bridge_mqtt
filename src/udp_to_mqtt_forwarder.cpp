@@ -8,7 +8,8 @@ UdpToMqttForwarder::UdpToMqttForwarder(const std::string& mqtt_client_id,
                                        const std::string& mqtt_topic,
                                        int mqtt_qos,
                                        const std::string& multicast_addr,
-                                       int multicast_port)
+                                       int multicast_port,
+                                       const std::string& interface)
     : mqtt_topic_(mqtt_topic),
       mqtt_qos_(mqtt_qos),
       running_(false),
@@ -19,7 +20,7 @@ UdpToMqttForwarder::UdpToMqttForwarder(const std::string& mqtt_client_id,
     mqtt_client_ = std::make_unique<MqttClient>(mqtt_client_id, mqtt_broker, mqtt_port);
     
     // 创建UDP接收器
-    udp_receiver_ = std::make_unique<UdpReceiver>(multicast_addr, multicast_port);
+    udp_receiver_ = std::make_unique<UdpReceiver>(multicast_addr, multicast_port, interface);
 }
 
 UdpToMqttForwarder::~UdpToMqttForwarder() {

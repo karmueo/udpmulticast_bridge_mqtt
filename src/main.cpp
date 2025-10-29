@@ -30,13 +30,17 @@ int main(int argc, char* argv[]) {
     // UDP multicast settings from config
     std::string multicast_addr = config.getMulticastAddr();
     int multicast_port = config.getMulticastPort();
+    std::string interface = config.getInterface();
 
     std::cout << "MQTT broker: " << broker << ":" << port << std::endl;
     std::cout << "MQTT topic: " << topic << " qos=" << qos << std::endl;
     std::cout << "UDP multicast: " << multicast_addr << ":" << multicast_port << std::endl;
+    if (!interface.empty()) {
+        std::cout << "Network interface: " << interface << std::endl;
+    }
 
     // 创建并启动转发器
-    UdpToMqttForwarder forwarder(client_id, broker, port, topic, qos, multicast_addr, multicast_port);
+    UdpToMqttForwarder forwarder(client_id, broker, port, topic, qos, multicast_addr, multicast_port, interface);
     if (!forwarder.start()) {
         std::cerr << "Failed to start UDP->MQTT forwarder" << std::endl;
         return 1;

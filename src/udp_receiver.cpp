@@ -6,8 +6,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-UdpReceiver::UdpReceiver(const std::string& multicast_addr, int port)
-    : multicast_addr_(multicast_addr), port_(port), socket_fd_(-1), running_(false) {
+UdpReceiver::UdpReceiver(const std::string& multicast_addr, int port, const std::string& interface)
+    : multicast_addr_(multicast_addr), port_(port), interface_(interface), socket_fd_(-1), running_(false) {
 }
 
 UdpReceiver::~UdpReceiver() {
@@ -59,7 +59,21 @@ bool UdpReceiver::start(ReceiveCallback callback) {
         socket_fd_ = -1;
         return false;
     }
-    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    
+    // 设置网卡接口：如果指定了interface，则使用指定的；否则使用INADDR_ANY自动选择
+    if (!interface_.empty()) {
+        mreq.imr_interface.s_addr = inet_addr(interface_.c_str());
+        if (mreq.imr_interface.s_addr == INADDR_NONE) {
+            std::cerr << "Invalid interface address: " << interface_ << std::endl;
+            close(socket_fd_);
+            socket_fd_ = -1;
+            return false;
+        }
+        std::cout << "Using network interface: " << interface_ << std::endl;
+    } else {
+        mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+        std::cout << "Using INADDR_ANY (system will auto-select interface)" << std::endl;
+    }
 
     if (setsockopt(socket_fd_, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
         std::cerr << "Failed to join multicast group" << std::endl;

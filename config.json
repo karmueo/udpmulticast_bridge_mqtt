@@ -8,6 +8,7 @@
   },
   "udp": {
     "multicast_addr": "239.255.0.1",
-    "multicast_port": 5555
+    "multicast_port": 5555,
+    "interface": "192.168.1.110"
   }
 }

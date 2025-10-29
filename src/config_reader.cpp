@@ -4,7 +4,7 @@
 #include <nlohmann/json.hpp>
 
 ConfigReader::ConfigReader(const std::string& config_file)
-    : config_file_(config_file), port_(1883), qos_(1), multicast_addr_("224.0.0.1"), multicast_port_(5555) {
+    : config_file_(config_file), port_(1883), qos_(1), multicast_addr_("224.0.0.1"), multicast_port_(5555), interface_("") {
 }
 
 bool ConfigReader::load() {
@@ -39,6 +39,7 @@ bool ConfigReader::load() {
         auto& u = j["udp"];
         if (u.contains("multicast_addr")) multicast_addr_ = u["multicast_addr"].get<std::string>();
         if (u.contains("multicast_port")) multicast_port_ = u["multicast_port"].get<int>();
+        if (u.contains("interface")) interface_ = u["interface"].get<std::string>();
     }
 
     if (j.contains("multicast") && j["multicast"].is_object()) {
@@ -83,4 +84,8 @@ std::string ConfigReader::getMulticastAddr() const {
 
 int ConfigReader::getMulticastPort() const {
     return multicast_port_;
+}
+
+std::string ConfigReader::getInterface() const {
+    return interface_;
 }

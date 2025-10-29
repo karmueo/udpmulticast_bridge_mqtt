@@ -24,6 +24,7 @@ public:
      * @param mqtt_qos MQTT消息QoS（默认1）
      * @param multicast_addr UDP组播地址
      * @param multicast_port UDP接收端口
+     * @param interface 网卡接口地址（可选，为空则自动选择）
      */
     UdpToMqttForwarder(const std::string& mqtt_client_id,
                        const std::string& mqtt_broker,
@@ -31,7 +32,8 @@ public:
                        const std::string& mqtt_topic,
                        int mqtt_qos,
                        const std::string& multicast_addr,
-                       int multicast_port);
+                       int multicast_port,
+                       const std::string& interface = "");
     
     ~UdpToMqttForwarder();
 

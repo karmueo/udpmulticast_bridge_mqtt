@@ -15,6 +15,7 @@ public:
     std::string getClientId() const;
     std::string getMulticastAddr() const;
     int getMulticastPort() const;
+    std::string getInterface() const;
 
 private:
     std::string config_file_;
@@ -27,6 +28,7 @@ private:
     // UDP multicast settings
     std::string multicast_addr_;
     int multicast_port_;
+    std::string interface_;
 };
 
 #endif // CONFIG_READER_H

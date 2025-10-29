@@ -11,7 +11,7 @@ public:
     // 接收回调函数类型
     using ReceiveCallback = std::function<void(const std::string&)>;
 
-    UdpReceiver(const std::string& multicast_addr, int port);
+    UdpReceiver(const std::string& multicast_addr, int port, const std::string& interface = "");
     ~UdpReceiver();
 
     // 启动接收线程
@@ -26,6 +26,7 @@ public:
 private:
     std::string multicast_addr_;
     int port_;
+    std::string interface_;
     int socket_fd_;
     std::atomic<bool> running_;
     std::thread receive_thread_;

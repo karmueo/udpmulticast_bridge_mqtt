@@ -2,6 +2,12 @@
 """
 UDP Multicast Message Sender
 用于向UDP组播地址发送JSON格式的测试消息
+
+python3 send_multicast.py --help
+指定网卡：
+python3 send_multicast.py --addr 239.255.0.1 --port 5555 -j --interface 192.168.1.110
+使用系统默认网卡（默认）：
+python3 send_multicast.py --addr 239.255.0.1 --port 5555 -j
 """
 
 import socket
@@ -10,7 +16,7 @@ import time
 import sys
 from argparse import ArgumentParser
 
-def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl=2, use_current_timestamp=False, message_id=None):
+def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl=2, use_current_timestamp=False, message_id=None, interface=""):
     """
     发送UDP组播消息
     
@@ -21,6 +27,7 @@ def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl
         ttl: TTL (生存时间)，决定消息能传播的范围
         use_current_timestamp: 是否在发送时使用当前时间戳更新JSON消息
         message_id: 消息ID，如果提供且消息是JSON格式，则添加到消息中
+        interface: 网卡接口地址（可选，为空则自动选择）
     """
     try:
         # 如果需要使用当前时间戳或添加ID，更新JSON消息
@@ -40,6 +47,17 @@ def send_multicast_message(message, multicast_addr="239.255.0.1", port=6000, ttl
         
         # 设置TTL
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+        
+        # 设置网卡接口：如果指定了interface，则使用指定的；否则使用系统默认
+        if interface:
+            try:
+                sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface))
+                print(f"  Using network interface: {interface}")
+            except Exception as e:
+                print(f"  Warning: Failed to set interface {interface}: {e}")
+                print(f"  Using system default interface")
+        else:
+            print(f"  Using system default interface")
         
         # 发送消息
         sock.sendto(message.encode(), (multicast_addr, port))
@@ -70,6 +88,8 @@ def main():
                         help="Interval between sends in seconds (default: 1.0)")
     parser.add_argument("--ttl", type=int, default=2,
                         help="TTL (Time To Live) for multicast (default: 2)")
+    parser.add_argument("--interface", default="",
+                        help="Network interface address (e.g., 192.168.1.100). Empty for system default.")
     
     args = parser.parse_args()
     
@@ -93,6 +113,8 @@ def main():
     print(f"Count: {args.count}")
     if args.count > 1:
         print(f"Interval: {args.interval}s")
+    if args.interface:
+        print(f"Interface: {args.interface}")
     print("=" * 60)
     print()
     
@@ -107,7 +129,7 @@ def main():
         
         # 为JSON消息添加递增的ID
         message_id = i + 1 if args.json else None
-        if send_multicast_message(args.message, args.addr, args.port, args.ttl, True if args.json else False, message_id):
+        if send_multicast_message(args.message, args.addr, args.port, args.ttl, True if args.json else False, message_id, args.interface):
             success_count += 1
         
         if args.count > 1 and i < args.count - 1:
